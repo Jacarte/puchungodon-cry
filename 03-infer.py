@@ -69,5 +69,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-# After generating the csv, we augment the generated images by using some noise algorithm, e.g. Gaussian noise, etc.
