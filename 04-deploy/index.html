@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <button>Record</button>
+    <script type="application/javascript">
+        // Get the microphone and record for 7 seconds
+        function record(){
+            navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                const mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.start();
+                const audioChunks = [];
+                mediaRecorder.addEventListener("dataavailable", event => {
+                    audioChunks.push(event.data);
+                });
+                mediaRecorder.addEventListener("stop", () => {
+                    const audioBlob = new Blob(audioChunks);
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    const audio = new Audio(audioUrl);
+                    // audio.play();
+                    // Get as wav
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = () => {
+                        const base64data = reader.result;
+                        console.log(base64data);
+                    };
+
+                });
+                setTimeout(() => {
+                    mediaRecorder.stop();
+                }, 7000);
+            });
+        }
+    </script>
+</body>
+</html>
