@@ -10,6 +10,7 @@ import os
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Reshape
 import matplotlib.pyplot as plt
+import json
 
 
 ARGS = argparse.ArgumentParser()
@@ -69,13 +70,19 @@ def main():
     # Set a number to each class
     data['class'] = pd.Categorical(data['class'])
     
-
-    print(data)
     # Separate features and labels
     X = data.iloc[:, :-1]  # all columns except the last one
     y = data.iloc[:, -1]   # the last column (class labels)
     # Encode the class labels
     label_encoder = LabelEncoder()
+    # Map the class labels to integers
+    classes_map = dict(enumerate(data['class'].cat.categories))
+    LOG.debug(classes_map)
+
+    # Save the class mapping
+    with open(f'{args.output}/classes.json', 'w') as f:
+        json.dump(classes_map, f)
+
     y = label_encoder.fit_transform(y)
     # Normalize the mel spectrogram values to a range [0, 1]
     X_min = X.min()
@@ -85,9 +92,10 @@ def main():
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=args.seed, stratify=y)
 
     # Verify the split
-    print(f"Training set size: {X_train.shape[0]} samples")
-    print(f"Test set size: {X_test.shape[0]} samples")
+    LOG.debug(f"Training set size: {X_train.shape[0]} samples")
+    LOG.debug(f"Test set size: {X_test.shape[0]} samples")
     num_classes = len(np.unique(y))
+
     y_train = tf.keras.utils.to_categorical(y_train, num_classes=num_classes)
     y_test = tf.keras.utils.to_categorical(y_test, num_classes=num_classes)
 
@@ -98,7 +106,7 @@ def main():
 
     # Evaluate the model on the test set
     test_loss, test_acc = model.evaluate(X_test, y_test)
-    print(f"Test accuracy: {test_acc}")
+    LOG.info(f"Test accuracy: {test_acc}")
 
     if args.plot:
         # Extract the training and validation accuracy values
@@ -121,7 +129,7 @@ def main():
 
     # Save the model
     os.makedirs(args.output, exist_ok=True)
-    model.save(f'{args.output}/model.h5')
+    model.save(f'{args.output}/model.keras')
     
 
 if __name__ == '__main__':
